@@ -27,4 +27,4 @@ This project reads hardware metrics directly from the system and pushes them to 
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/system-live-dashboard.git
+   git clone https://github.com/ashkanpeymanofficial/system-live-dashboard.git
