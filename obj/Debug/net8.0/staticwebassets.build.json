@@ -1,0 +1,58 @@
+{
+  "Version": 1,
+  "Hash": "UbdXugpUyFulZOIg5+6QT4VNh4M25k1xRgAp3pPgpkk=",
+  "Source": "SystemLiveDashboard",
+  "BasePath": "_content/SystemLiveDashboard",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "SystemLiveDashboard\\wwwroot",
+      "Source": "SystemLiveDashboard",
+      "ContentRoot": "C:\\Users\\NOVIN PENDAR\\Desktop\\c#\\SystemLiveDashboard\\wwwroot\\",
+      "BasePath": "_content/SystemLiveDashboard",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "C:\\Users\\NOVIN PENDAR\\Desktop\\c#\\SystemLiveDashboard\\wwwroot\\history.html",
+      "SourceId": "SystemLiveDashboard",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\NOVIN PENDAR\\Desktop\\c#\\SystemLiveDashboard\\wwwroot\\",
+      "BasePath": "_content/SystemLiveDashboard",
+      "RelativePath": "history.html",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\history.html"
+    },
+    {
+      "Identity": "C:\\Users\\NOVIN PENDAR\\Desktop\\c#\\SystemLiveDashboard\\wwwroot\\index.html",
+      "SourceId": "SystemLiveDashboard",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\NOVIN PENDAR\\Desktop\\c#\\SystemLiveDashboard\\wwwroot\\",
+      "BasePath": "_content/SystemLiveDashboard",
+      "RelativePath": "index.html",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\index.html"
+    }
+  ]
+}

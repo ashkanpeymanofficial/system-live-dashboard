@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="fa" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <title>System Live Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@latest/dist/browser/signalr.min.js"></script> 
+    <style>
+               * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(ellipse at top, #0f172a 0%, #020617 60%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 20px 24px; /* فاصله از لبه‌های صفحه */
+        }
+        
+        /* هدر (شامل تایتل و دکمه‌ها) */
+        .header {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            margin-bottom: 40px; /* 👈 این دقیقاً فاصله بین دکمه‌ها و کارت‌های زیرین رو تنظیم میکنه */
+        }
+        h1 {
+            font-size: 1.5em; font-weight: 700;
+            background: linear-gradient(90deg, #38bdf8, #a78bfa);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .status-pill {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 14px; border-radius: 999px;
+    background: rgba(74, 222, 128, 0.1);
+    border: 1px solid rgba(74, 222, 128, 0.3);
+    font-size: 0.8em; color: #4ade80;
+}
+.status-pill.disconnected {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+}
+.dot {
+    width: 8px; height: 8px; border-radius: 50%; background: currentColor;
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+        /* کانتینر کارت‌های بالا */
+        .grid-top {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        
+        }
+
+        .card {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.7));
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            backdrop-filter: blur(12px);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(56, 189, 248, 0.3);
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, currentColor, transparent);
+            opacity: 0.6;
+        }
+        .card.blue { color: #38bdf8; }
+        .card.purple { color: #a78bfa; }
+        .card.green { color: #4ade80; }
+        .card.orange { color: #fb923c; }
+        .card.pink { color: #f472b6; }
+        .card.yellow { color: #fbbf24; }
+
+        .card .label {
+            font-size: 0.75em; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 1px; opacity: 0.8; margin-bottom: 8px;
+        }
+        .card .value {
+            font-size: 2.2em; font-weight: 800;
+            color: inherit; line-height: 1;
+        }
+        .card .value .unit {
+            font-size: 0.4em; font-weight: 500; opacity: 0.7; margin-left: 4px;
+        }
+        .card .sub {
+            font-size: 0.75em; color: #64748b; margin-top: 8px;
+        }
+
+        .panel {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.5), rgba(15, 23, 42, 0.5));
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .panel-title {
+            font-size: 0.85em; font-weight: 600; color: #94a3b8;
+            text-transform: uppercase; letter-spacing: 1px;
+            margin-bottom: 14px;
+        }
+
+        .grid-two {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        @media (max-width: 900px) {
+            .grid-two { grid-template-columns: 1fr; }
+        }
+
+        .core-bar {
+            display: flex; align-items: center; gap: 10px;
+            margin-bottom: 6px; font-size: 0.8em;
+        }
+        .core-bar .name { width: 70px; color: #94a3b8; }
+        .core-bar .track {
+            flex: 1; height: 6px; background: rgba(148, 163, 184, 0.1);
+            border-radius: 3px; overflow: hidden;
+        }
+        .core-bar .fill {
+            height: 100%;
+            background: linear-gradient(90deg, #38bdf8, #a78bfa);
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+        .core-bar .pct { width: 45px; text-align: right; color: #e2e8f0; }
+
+        .disk-item {
+            margin-bottom: 14px;
+        }
+        .disk-item .head {
+            display: flex; justify-content: space-between;
+            font-size: 0.8em; margin-bottom: 6px;
+        }
+        .disk-item .track {
+            height: 8px; background: rgba(148, 163, 184, 0.1);
+            border-radius: 4px; overflow: hidden;
+        }
+        .disk-item .fill {
+            height: 100%; border-radius: 4px;
+            background: linear-gradient(90deg, #4ade80, #38bdf8);
+            transition: width 0.5s ease;
+        }
+        .disk-item .fill.warn { background: linear-gradient(90deg, #fbbf24, #f97316); }
+        .disk-item .fill.danger { background: linear-gradient(90deg, #f97316, #ef4444); }
+
+        .proc-item {
+            display: flex; justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.05);
+            font-size: 0.85em;
+        }
+        .proc-item:last-child { border-bottom: none; }
+        .proc-item .name { color: #cbd5e1; }
+        .proc-item .val { color: #38bdf8; font-weight: 600; }
+
+        canvas { max-height: 220px; }
+
+        .net-row {
+            display: flex; justify-content: space-around;
+            text-align: center;
+        }
+        .net-row .item .arrow { font-size: 1.5em; }
+        .net-row .item.down .arrow { color: #4ade80; }
+        .net-row .item.up .arrow { color: #f472b6; }
+        .net-row .item .speed { font-size: 1.4em; font-weight: 700; margin-top: 4px; }
+        .net-row .item .lbl { font-size: 0.7em; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
+                /* استایل نوار هشدار */
+                .alert-banner {
+            display: none; /* به صورت پیش‌فرض مخفی است */
+            background: linear-gradient(90deg, #ef4444, #b91c1c);
+            color: white;
+            text-align: center;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+            animation: alertPulse 1.5s infinite;
+            font-size: 1.1em;
+        }
+        .alert-banner.show {
+            display: block; /* وقتی کلاس show اضافه شود، نمایان می‌شود */
+        }
+        @keyframes alertPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 35px rgba(239, 68, 68, 0.8); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>⚡ System Live Dashboard</h1>
+        
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <!-- دکمه History -->
+            <a href="/history.html" style="background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(148, 163, 184, 0.2); color: #e2e8f0; padding: 8px 16px; border-radius: 999px; text-decoration: none; font-size: 0.85em; transition: all 0.2s;">📊 History</a>
+            
+            <!-- وضعیت اتصال -->
+            <div class="status-pill" id="status" style="margin: 0;">
+                <span class="dot"></span>
+                <span id="statusText">Connecting...</span>
+            </div>
+        </div>
+    </div>
+
+<!-- نوار هشدار -->
+<div id="alertBanner" class="alert-banner"></div>
+<!-- کارت‌های خلاصه -->
+<div class="grid-top">
+    <div class="card blue">
+        <div class="label">CPU Load</div>
+        <div class="value"><span id="cpuLoad">0</span><span class="unit">%</span></div>
+        <div class="sub" id="cpuName">-</div>
+    </div>
+    <div class="card purple">
+        <div class="label">CPU Cores</div>
+        <div class="value"><span id="coreCount">0</span><span class="unit">C / <span id="threadCount">0</span>T</span></div>
+        <div class="sub">Physical / Logical</div>
+    </div>
+    <div class="card green">
+        <div class="label">Memory Used</div>
+        <div class="value"><span id="memPercent">0</span><span class="unit">%</span></div>
+        <div class="sub"><span id="memInfo">-</span></div>
+    </div>
+    <div class="card orange">
+        <div class="label">Uptime</div>
+        <div class="value" style="font-size:1.6em;" id="uptime">-</div>
+        <div class="sub">Since boot</div>
+    </div>
+</div>
+
+<!-- نمودار + شبکه -->
+<div class="grid-two">
+    <div class="panel">
+        <div class="panel-title">📈 Resource Trend (60s)</div>
+        <canvas id="liveChart"></canvas>
+    </div>
+    <div class="panel">
+        <div class="panel-title">🌐 Network Speed</div>
+        <div class="net-row" style="margin-top:20px;">
+            <div class="item down">
+                <div class="arrow">↓</div>
+                <div class="speed"><span id="downSpeed">0</span></div>
+                <div class="lbl">KB/s Down</div>
+            </div>
+            <div class="item up">
+                <div class="arrow">↑</div>
+                <div class="speed"><span id="upSpeed">0</span></div>
+                <div class="lbl">KB/s Up</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- هسته‌ها + دیسک + پروسه -->
+<div class="grid-two">
+    <div class="panel">
+        <div class="panel-title">🧠 CPU Cores Load</div>
+        <div id="coreBars" style="max-height:200px; overflow-y:auto;"></div>
+    </div>
+    <div class="panel">
+        <div class="panel-title">💾 Disks</div>
+        <div id="disks"></div>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-title">🔥 Top 5 Processes by RAM</div>
+    <div id="procs"></div>
+</div>
+
+<script>
+    // ===== نمودار =====
+    const maxPoints = 30;
+    const labels = [], cpuData = [], memData = [];
+    const ctx = document.getElementById('liveChart').getContext('2d');
+
+    const cpuGradient = ctx.createLinearGradient(0, 0, 0, 220);
+    cpuGradient.addColorStop(0, 'rgba(56, 189, 248, 0.4)');
+    cpuGradient.addColorStop(1, 'rgba(56, 189, 248, 0)');
+
+    const memGradient = ctx.createLinearGradient(0, 0, 0, 220);
+    memGradient.addColorStop(0, 'rgba(167, 139, 250, 0.4)');
+    memGradient.addColorStop(1, 'rgba(167, 139, 250, 0)');
+
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [
+                { label: 'CPU %', data: cpuData, borderColor: '#38bdf8', backgroundColor: cpuGradient, fill: true, tension: 0.4, pointRadius: 0, borderWidth: 2 },
+                { label: 'RAM %', data: memData, borderColor: '#a78bfa', backgroundColor: memGradient, fill: true, tension: 0.4, pointRadius: 0, borderWidth: 2 }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            scales: {
+                y: { beginAtZero: true, max: 100, grid: { color: 'rgba(148,163,184,0.08)' }, ticks: { color: '#64748b', font: { size: 10 } } },
+                x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 }, maxTicksLimit: 6 } }
+            },
+            plugins: { legend: { labels: { color: '#cbd5e1', font: { size: 11 }, boxWidth: 12 } } }
+        }
+    });
+
+    // ===== SignalR =====
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/monitorHub")
+        .withAutomaticReconnect()
+        .build();
+
+    connection.on("ReceiveStats", (s) => {
+        // کارت‌ها
+        document.getElementById('cpuLoad').textContent = s.cpuLoad;
+                    // ===== سیستم هشدار =====
+                    const alertBanner = document.getElementById('alertBanner');
+            let alerts = [];
+            
+            if (s.cpuLoad >= 80) alerts.push(`⚠️ CPU Load Critical: ${s.cpuLoad}%`);
+            if (s.memUsedPercent >= 90) alerts.push(`⚠️ Memory Critical: ${s.memUsedPercent}%`);
+            
+            if (alerts.length > 0) {
+                alertBanner.textContent = alerts.join('  |  ');
+                alertBanner.classList.add('show');
+            } else {
+                alertBanner.classList.remove('show');
+            }
+            // ========================
+        document.getElementById('cpuName').textContent = s.cpuName;
+        document.getElementById('coreCount').textContent = s.coreCount;
+        document.getElementById('threadCount').textContent = s.threadCount;
+        document.getElementById('memPercent').textContent = s.memUsedPercent;
+        document.getElementById('memInfo').textContent = `${s.memUsedGB} / ${s.memTotalGB} GB`;
+        document.getElementById('uptime').textContent = s.uptime;
+        document.getElementById('downSpeed').textContent = s.downSpeedKB.toFixed(1);
+        document.getElementById('upSpeed').textContent = s.upSpeedKB.toFixed(1);
+
+        // نمودار
+        labels.push(s.timestamp);
+        cpuData.push(s.cpuLoad);
+        memData.push(s.memUsedPercent);
+        if (labels.length > maxPoints) { labels.shift(); cpuData.shift(); memData.shift(); }
+        chart.update();
+
+        // هسته‌ها
+        const coreBars = document.getElementById('coreBars');
+        coreBars.innerHTML = '';
+        s.coreLoads.forEach(c => {
+            coreBars.innerHTML += `
+                <div class="core-bar">
+                    <div class="name">${c.name.replace('CPU Core #', 'Core ')}</div>
+                    <div class="track"><div class="fill" style="width:${c.value}%"></div></div>
+                    <div class="pct">${c.value}%</div>
+                </div>`;
+        });
+
+        // دیسک‌ها
+        const disks = document.getElementById('disks');
+        disks.innerHTML = '';
+        s.disks.forEach(d => {
+            const cls = d.percent > 90 ? 'danger' : d.percent > 75 ? 'warn' : '';
+            disks.innerHTML += `
+                <div class="disk-item">
+                    <div class="head">
+                        <span>${d.name} <small style="color:#64748b">(${d.label})</small></span>
+                        <span style="color:#94a3b8">${d.usedGB} / ${d.totalGB} GB</span>
+                    </div>
+                    <div class="track"><div class="fill ${cls}" style="width:${d.percent}%"></div></div>
+                </div>`;
+        });
+
+        // پروسه‌ها
+        const procs = document.getElementById('procs');
+        procs.innerHTML = '';
+        s.topProcesses.forEach(p => {
+            procs.innerHTML += `
+                <div class="proc-item">
+                    <span class="name">${p.name}</span>
+                    <span class="val">${p.ramMB} MB</span>
+                </div>`;
+        });
+    });
+
+    function updateStatus(connected) {
+        const pill = document.getElementById('status');
+        const text = document.getElementById('statusText');
+        if (connected) {
+            pill.classList.remove('disconnected');
+            text.textContent = 'Connected — Live';
+        } else {
+            pill.classList.add('disconnected');
+            text.textContent = 'Disconnected';
+        }
+    }
+
+    connection.onreconnecting(() => updateStatus(false));
+    connection.onreconnected(() => updateStatus(true));
+    connection.onclose(() => updateStatus(false));
+
+    connection.start()
+        .then(() => updateStatus(true))
+        .catch(err => { updateStatus(false); console.error(err); });
+</script>
+</body>
+</html>
