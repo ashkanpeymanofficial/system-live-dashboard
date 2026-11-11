@@ -4,7 +4,7 @@ A modern, sleek, and real-time system monitoring dashboard built with **C# (.NET
 
 This project reads hardware metrics directly from the system and pushes them to a web browser in real-time without requiring page reloads.
 
-![Dashboard Preview](https://via.placeholder.com/800x400/0f172a/38bdf8?text=System+Live+Dashboard+Preview) <!-- (می‌تونی بعدا عکس خودت رو اینجا بذاری) -->
+![Dashboard Preview](https://github.com/ashkanpeymanofficial/system-live-dashboard/blob/main/screenshots/preview%20(2).png?raw=true) <!-- (می‌تونی بعدا عکس خودت رو اینجا بذاری) -->
 
 ## ✨ Features
 
